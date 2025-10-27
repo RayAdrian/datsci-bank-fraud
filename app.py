@@ -52,61 +52,59 @@ if risk != "All":
 filtered_df['target_label'] = filtered_df['target'].map({0: 'Approved', 1: 'Rejected/Default'})
 filtered_df['delinquency_label'] = filtered_df['recent_delinquency_flag'].map({0: 'No', 1: 'Yes'})
 
-# --- Visualizations ---
+# --- Key Insights with Visualizations ---
+st.header("🧠 Key Insights")
 
-st.subheader("🎯 Approval by Demographics")
+# --------------------------
+# 🔹 Insight 1: High Approval Rates
+# --------------------------
+st.subheader("🔹 Insight 1: Approval rates are very high (~91.5%), even among higher-risk applicants")
+st.markdown("""
+- Applicants with poor credit history, low payment ratios, and recent delinquencies are often still approved.
+- Risk grades D and E are overrepresented in the "Approved" group.
+""")
+
+fig_risk_grade = px.histogram(filtered_df, x="risk_grade", color="target_label", barmode="group",
+                              title="Target Distribution by Risk Grade")
+st.plotly_chart(fig_risk_grade, use_container_width=True)
+
 col1, col2 = st.columns(2)
-
 with col1:
-    fig1 = px.histogram(filtered_df, x="gender", color="target_label", barmode="group", title="Approval by Gender")
-    st.plotly_chart(fig1, use_container_width=True)
+    fig_gender = px.histogram(filtered_df, x="gender", color="target_label", barmode="group",
+                              title="Approval by Gender")
+    st.plotly_chart(fig_gender, use_container_width=True)
 
 with col2:
-    fig2 = px.histogram(filtered_df, x="marital_status", color="target_label", barmode="group", title="Approval by Marital Status")
-    st.plotly_chart(fig2, use_container_width=True)
+    fig_marital = px.histogram(filtered_df, x="marital_status", color="target_label", barmode="group",
+                               title="Approval by Marital Status")
+    st.plotly_chart(fig_marital, use_container_width=True)
 
-st.subheader("💼 Employment & Credit Behavior")
-
-fig3 = px.box(filtered_df, x="employment_type", y="monthly_income", color="target_label", title="Income by Employment Type")
-st.plotly_chart(fig3, use_container_width=True)
-
-fig4 = px.scatter(filtered_df, x="utilization_ratio", y="payment_history_on_time_ratio",
-                  color="target_label", hover_data=["application_id"],
-                  title="Utilization vs On-Time Payment History")
-st.plotly_chart(fig4, use_container_width=True)
-
-st.subheader("📉 Risk Grade & Defaults")
-fig5 = px.histogram(filtered_df, x="risk_grade", color="target_label", barmode="group", title="Target Distribution by Risk Grade")
-st.plotly_chart(fig5, use_container_width=True)
-
-st.subheader("📍 Regional View")
-fig6 = px.histogram(filtered_df, x="region", color="target_label", barmode="group", title="Applications by Region")
-st.plotly_chart(fig6, use_container_width=True)
+st.markdown("---")
 
 # --------------------------
-# 📈 Correlation Heatmap
+# 🔹 Insight 2: Credit Utilization
 # --------------------------
-st.subheader("📊 Correlation Heatmap")
+st.subheader("🔹 Insight 2: Credit utilization is strongly linked to repayment performance")
+st.markdown("""
+- Higher utilization ratio correlates with lower on-time payment history and higher delinquency.
+- Yet, utilization is not currently treated as a disqualifier.
+""")
 
-numeric_cols = filtered_df.select_dtypes(include=['float64', 'int64'])
-corr = numeric_cols.corr().round(2)
+fig_utilization = px.scatter(filtered_df, x="utilization_ratio", y="payment_history_on_time_ratio",
+                             color="target_label", hover_data=["application_id"],
+                             title="Utilization vs On-Time Payment History")
+st.plotly_chart(fig_utilization, use_container_width=True)
 
-heatmap = ff.create_annotated_heatmap(
-    z=corr.values,
-    x=list(corr.columns),
-    y=list(corr.index),
-    colorscale='Viridis',
-    showscale=True,
-    reversescale=True
-)
-
-heatmap.update_layout(height=800, margin=dict(l=40, r=40, t=40, b=40))
-st.plotly_chart(heatmap, use_container_width=True)
+st.markdown("---")
 
 # --------------------------
-# 🕵️ Fraud Rate by Segment
+# 🔹 Insight 3: Fraud in Digital Channels
 # --------------------------
-st.subheader("🕵️ Fraud Risk by Segment")
+st.subheader("🔹 Insight 3: Fraud patterns concentrate in digital channels")
+st.markdown("""
+- Fraud rate is highest among applications submitted via Online and Unknown devices.
+- Fraudulent profiles often have incomplete contact information (invalid email/phone) and short employment history.
+""")
 
 col1, col2 = st.columns(2)
 
@@ -124,24 +122,67 @@ with col2:
                               labels={"fraud_flag": "Fraud Rate"})
     st.plotly_chart(fig_fraud_device, use_container_width=True)
 
+fig_channel = px.histogram(filtered_df, x="application_channel", color="target_label",
+                           barmode="group", title="Target by Application Channel")
+st.plotly_chart(fig_channel, use_container_width=True)
+
+st.markdown("---")
+
 # --------------------------
-# 📉 Defaults by Risk Indicators
+# 🔹 Insight 4: Self-Employed Risk
 # --------------------------
-st.subheader("📉 Defaults by Risk Indicators")
+st.subheader("🔹 Insight 4: Self-employed applicants exhibit higher income variance and risk")
+st.markdown("""
+- Though income can be high, the group shows inconsistent bureau patterns and more closed accounts.
+""")
+
+fig_income = px.box(filtered_df, x="employment_type", y="monthly_income", color="target_label",
+                    title="Income by Employment Type")
+st.plotly_chart(fig_income, use_container_width=True)
+
+st.markdown("---")
+
+# --------------------------
+# 🔹 Insight 5: Delinquency Predictors
+# --------------------------
+st.subheader("🔹 Insight 5: Recent delinquency and risk grades are powerful predictors of default")
+st.markdown("""
+- Applicants with a recent delinquency flag and risk grade D/E show significantly higher rejection and fraud rates.
+""")
 
 fig_delinquency = px.histogram(filtered_df, x="delinquency_label", color="target_label",
                                barmode="group", title="Defaults vs Recent Delinquency")
 st.plotly_chart(fig_delinquency, use_container_width=True)
 
-fig_risk_grade = px.histogram(filtered_df, x="risk_grade", color="delinquency_label",
-                              barmode="group", title="Delinquency Flag by Risk Grade")
-st.plotly_chart(fig_risk_grade, use_container_width=True)
+fig_risk_delinq = px.histogram(filtered_df, x="risk_grade", color="delinquency_label",
+                               barmode="group", title="Delinquency Flag by Risk Grade")
+st.plotly_chart(fig_risk_delinq, use_container_width=True)
+
+st.markdown("---")
 
 # --------------------------
-# 📨 Applications by Channel
+# 📊 Additional Analysis
 # --------------------------
-st.subheader("📨 Applications by Channel")
+st.header("📊 Additional Analysis")
 
-fig_channel = px.histogram(filtered_df, x="application_channel", color="target_label",
-                           barmode="group", title="Target by Application Channel")
-st.plotly_chart(fig_channel, use_container_width=True)
+st.subheader("📍 Regional View")
+fig_region = px.histogram(filtered_df, x="region", color="target_label", barmode="group",
+                         title="Applications by Region")
+st.plotly_chart(fig_region, use_container_width=True)
+
+st.subheader("📈 Correlation Heatmap")
+
+numeric_cols = filtered_df.select_dtypes(include=['float64', 'int64'])
+corr = numeric_cols.corr().round(2)
+
+heatmap = ff.create_annotated_heatmap(
+    z=corr.values,
+    x=list(corr.columns),
+    y=list(corr.index),
+    colorscale='Viridis',
+    showscale=True,
+    reversescale=True
+)
+
+heatmap.update_layout(height=800, margin=dict(l=40, r=40, t=40, b=40))
+st.plotly_chart(heatmap, use_container_width=True)
