@@ -12,6 +12,10 @@ def load_data():
 
 df = load_data()
 
+# Create descriptive labels for better legend readability
+df['target_label'] = df['target'].map({0: 'Approved', 1: 'Rejected/Default'})
+df['delinquency_label'] = df['recent_delinquency_flag'].map({0: 'No', 1: 'Yes'})
+
 st.title("📊 Synthetic Bank Dashboard")
 st.markdown("Visual exploration of application and credit data.")
 
@@ -44,35 +48,39 @@ if employment != "All":
 if risk != "All":
     filtered_df = filtered_df[filtered_df["risk_grade"] == risk]
 
+# Ensure descriptive labels are present in filtered data
+filtered_df['target_label'] = filtered_df['target'].map({0: 'Approved', 1: 'Rejected/Default'})
+filtered_df['delinquency_label'] = filtered_df['recent_delinquency_flag'].map({0: 'No', 1: 'Yes'})
+
 # --- Visualizations ---
 
 st.subheader("🎯 Approval by Demographics")
 col1, col2 = st.columns(2)
 
 with col1:
-    fig1 = px.histogram(filtered_df, x="gender", color="target", barmode="group", title="Approval by Gender")
+    fig1 = px.histogram(filtered_df, x="gender", color="target_label", barmode="group", title="Approval by Gender")
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
-    fig2 = px.histogram(filtered_df, x="marital_status", color="target", barmode="group", title="Approval by Marital Status")
+    fig2 = px.histogram(filtered_df, x="marital_status", color="target_label", barmode="group", title="Approval by Marital Status")
     st.plotly_chart(fig2, use_container_width=True)
 
 st.subheader("💼 Employment & Credit Behavior")
 
-fig3 = px.box(filtered_df, x="employment_type", y="monthly_income", color="target", title="Income by Employment Type")
+fig3 = px.box(filtered_df, x="employment_type", y="monthly_income", color="target_label", title="Income by Employment Type")
 st.plotly_chart(fig3, use_container_width=True)
 
 fig4 = px.scatter(filtered_df, x="utilization_ratio", y="payment_history_on_time_ratio",
-                  color="target", hover_data=["application_id"],
+                  color="target_label", hover_data=["application_id"],
                   title="Utilization vs On-Time Payment History")
 st.plotly_chart(fig4, use_container_width=True)
 
 st.subheader("📉 Risk Grade & Defaults")
-fig5 = px.histogram(filtered_df, x="risk_grade", color="target", barmode="group", title="Target Distribution by Risk Grade")
+fig5 = px.histogram(filtered_df, x="risk_grade", color="target_label", barmode="group", title="Target Distribution by Risk Grade")
 st.plotly_chart(fig5, use_container_width=True)
 
 st.subheader("📍 Regional View")
-fig6 = px.histogram(filtered_df, x="region", color="target", barmode="group", title="Applications by Region")
+fig6 = px.histogram(filtered_df, x="region", color="target_label", barmode="group", title="Applications by Region")
 st.plotly_chart(fig6, use_container_width=True)
 
 # --------------------------
@@ -121,11 +129,11 @@ with col2:
 # --------------------------
 st.subheader("📉 Defaults by Risk Indicators")
 
-fig_delinquency = px.histogram(filtered_df, x="recent_delinquency_flag", color="target",
+fig_delinquency = px.histogram(filtered_df, x="delinquency_label", color="target_label",
                                barmode="group", title="Defaults vs Recent Delinquency")
 st.plotly_chart(fig_delinquency, use_container_width=True)
 
-fig_risk_grade = px.histogram(filtered_df, x="risk_grade", color="recent_delinquency_flag",
+fig_risk_grade = px.histogram(filtered_df, x="risk_grade", color="delinquency_label",
                               barmode="group", title="Delinquency Flag by Risk Grade")
 st.plotly_chart(fig_risk_grade, use_container_width=True)
 
@@ -134,6 +142,6 @@ st.plotly_chart(fig_risk_grade, use_container_width=True)
 # --------------------------
 st.subheader("📨 Applications by Channel")
 
-fig_channel = px.histogram(filtered_df, x="application_channel", color="target",
+fig_channel = px.histogram(filtered_df, x="application_channel", color="target_label",
                            barmode="group", title="Target by Application Channel")
 st.plotly_chart(fig_channel, use_container_width=True)
